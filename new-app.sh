@@ -1,8 +1,9 @@
 #!/bin/bash
 
-NEW_REPO=1
-DEBUG=1
-CURRENT_DIR=`pwd`
+group_id_prefix="com.example."
+new_repo=1
+debug=1
+work_dir=`pwd`
 
 github_token=$1
 # The basic dependencies.
@@ -10,7 +11,7 @@ dependencies="web,devtools"
 
 # Minimum required info.
 read -p "JIRA key: " jira_key
-read -p "GroupId: com.example.$jira_key." group_id_suffix
+read -p "GroupId: $group_id_prefix$jira_key." group_id_suffix
 read -p "ArtifactId: " artifact_id
 
 # Ask a few questions to gether dependencies.
@@ -44,7 +45,7 @@ echo "ArtifactId:      $artifact_id"
 echo "Dependency list: $dependencies "
 
 temp_dir=$(mktemp -d)
-if [ $DEBUG -eq 1 ]
+if [ $debug -eq 1 ]
 then
     echo "Temp dir: $temp_dir"
 fi
@@ -64,7 +65,7 @@ cp jenkins/Jenkinsfile $temp_dir
 
 cd $temp_dir
 
-if [ $NEW_REPO -eq 1 ]
+if [ $new_repo -eq 1 ]
 then
     curl -i -H "Authorization: token $github_token" \
         -d '{ 
@@ -88,7 +89,7 @@ then
         | oc create -f -
 
     # Bak to originl directory.
-    cd $CURRENT_DIR
+    cd $work_dir
     # Delete temp dir.
     rm -rf $temp_dir
 fi
