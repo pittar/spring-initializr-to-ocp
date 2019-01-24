@@ -2,6 +2,7 @@
 
 NEW_REPO=0
 DEBUG=1
+CURRENT_DIR=`pwd`
 
 github_token=$1
 # The basic dependencies.
@@ -56,6 +57,13 @@ curl https://start.spring.io/starter.tgz \
     -d applicationName=$artifactId \
     | tar -C $temp_dir -xzf -
 
+# Make a folder for OCP and copy files.
+mkdir "$temp_dir/ocp"
+cp ocp/template.yaml $temp_dir/ocp
+cp jenkins/Jenkinsfile $temp_dir
+
+cd $temp_dir
+
 if [ $NEW_REPO -eq 1 ]
 then
     curl -i -H "Authorization: token $github_token" \
@@ -67,5 +75,17 @@ then
             "gitignore_template": "Maven"
         }' \
         https://api.github.com/user/repos
+
+    git init
+    git add --all
+    git commit -m "Initial commit."
+    git remote add origin git@github.com:pittar/testrepo.git
+    git push -u origin master
+
+    # Create DEV and TEST ocp projects.
+    oc new-project $jira_key-dev
+    #oc new-project $jira_key-test
+    oc process -f ocp/template.yaml -p GIT_SOURCE_URL=https://github.com/pittar/testrepo.git \
+        oc create -f -
 fi
 
