@@ -10,14 +10,14 @@ dependencies="web,devtools"
 
 # Minimum required info.
 read -p "JIRA key: " jira_key
-read -p "GroupId: ca.canada.ised.$jira_key." group_id_suffix
+read -p "GroupId: com.example.$jira_key." group_id_suffix
 read -p "ArtifactId: " artifact_id
 
 # Ask a few questions to gether dependencies.
 read -p "Requires security? (y/n): " has_security
 read -p "Requires database? (y/n): " has_db
 read -p "Requires mail? (y/n): " has_mail
-# Or... just ask for a comman separted list.
+# Or... just ask for a comman separted list and don't bother asking individual questions.
 #read -p "Comma-separted list of dependences: web,devtools," dependencies
 
 group_id="ca.canada.ised.$group_id_suffix"
@@ -50,11 +50,11 @@ then
 fi
 
 # Generate a new project and extract it to the temp dir.
-curl https://start.spring.io/starter.tgz \\
-    -d artifactId=$artifactId \\
-    -d groupId=$groupId \\
-    -d dependencies=$dependencies \\
-    -d applicationName=$artifactId \\
+curl https://start.spring.io/starter.tgz \
+    -d artifactId=$artifact_id \
+    -d groupId=$group_id \
+    -d dependencies=$dependencies \
+    -d applicationName=$artifact_id \
     | tar -C $temp_dir -xzf -
 
 # Make a folder for OCP and copy files.
@@ -68,7 +68,7 @@ if [ $NEW_REPO -eq 1 ]
 then
     curl -i -H "Authorization: token $github_token" \
         -d '{ 
-            "name": "'"$artifactId"', 
+            "name": "testrepo", 
             "has_issues": false,
             "has_projects": false,
             "has_wiki": false
@@ -87,6 +87,9 @@ then
     oc process -f ocp/template.yaml -p GIT_SOURCE_URL=https://github.com/pittar/testrepo.git \
         | oc create -f -
 
+    # Bak to originl directory.
+    cd $CURRENT_DIR
+    # Delete temp dir.
     rm -rf $temp_dir
 fi
 
