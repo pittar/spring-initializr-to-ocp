@@ -50,11 +50,11 @@ then
 fi
 
 # Generate a new project and extract it to the temp dir.
-curl https://start.spring.io/starter.tgz \
-    -d dependencies=$dependencies \
-    -d artifactId=$artifactId \
-    -d groupId=$groupId \
-    -d applicationName=$artifactId \
+curl https://start.spring.io/starter.tgz \\
+    -d artifactId=$artifactId \\
+    -d groupId=$groupId \\
+    -d dependencies=$dependencies \\
+    -d applicationName=$artifactId \\
     | tar -C $temp_dir -xzf -
 
 # Make a folder for OCP and copy files.
@@ -68,7 +68,7 @@ if [ $NEW_REPO -eq 1 ]
 then
     curl -i -H "Authorization: token $github_token" \
         -d '{ 
-            "name": "testrepo", 
+            "name": "'"$artifactId"', 
             "has_issues": false,
             "has_projects": false,
             "has_wiki": false
