@@ -1,6 +1,6 @@
 #!/bin/bash
 
-NEW_REPO=0
+NEW_REPO=1
 DEBUG=1
 CURRENT_DIR=`pwd`
 
@@ -71,8 +71,7 @@ then
             "name": "testrepo", 
             "has_issues": false,
             "has_projects": false,
-            "has_wiki": false,
-            "gitignore_template": "Maven"
+            "has_wiki": false
         }' \
         https://api.github.com/user/repos
 
@@ -86,6 +85,8 @@ then
     oc new-project $jira_key-dev
     #oc new-project $jira_key-test
     oc process -f ocp/template.yaml -p GIT_SOURCE_URL=https://github.com/pittar/testrepo.git \
-        oc create -f -
+        | oc create -f -
+
+    rm -rf $temp_dir
 fi
 
