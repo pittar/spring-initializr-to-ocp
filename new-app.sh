@@ -1,6 +1,6 @@
 #!/bin/bash
 
-group_id_prefix="com.example."
+group_id_prefix="com.example"
 new_repo=1
 debug=1
 work_dir=`pwd`
@@ -11,7 +11,7 @@ dependencies="web,devtools"
 
 # Minimum required info.
 read -p "JIRA key: " jira_key
-read -p "GroupId: $group_id_prefix$jira_key." group_id_suffix
+read -p "GroupId: $group_id_prefix.$jira_key." group_id_suffix
 read -p "ArtifactId: " artifact_id
 
 # Ask a few questions to gether dependencies.
@@ -21,7 +21,7 @@ read -p "Requires mail? (y/n): " has_mail
 # Or... just ask for a comman separted list and don't bother asking individual questions.
 #read -p "Comma-separted list of dependences: web,devtools," dependencies
 
-group_id="ca.canada.ised.$group_id_suffix"
+group_id="$group_id_prefix.$jira_key.$group_id_suffix"
 
 if [ $has_security = 'y' ]
 then
@@ -62,6 +62,11 @@ curl https://start.spring.io/starter.tgz \
 mkdir "$temp_dir/ocp"
 cp ocp/template.yaml $temp_dir/ocp
 cp jenkins/Jenkinsfile $temp_dir
+cp .gitignore $temp_dir
+# Delete maven wrapper. Comment this out if you actually want it.
+rm -rf $temp_dir/.mvn
+rm $temp_dir/mvnw
+rm $temp_dir/mvnw.cmd
 
 cd $temp_dir
 
@@ -94,3 +99,14 @@ then
     rm -rf $temp_dir
 fi
 
+generate_post_data()
+{
+  cat <<EOF
+{ 
+    "name": "$artifact_id", 
+    "has_issues": false,
+    "has_projects": false,
+    "has_wiki": false
+}
+EOF 
+}
