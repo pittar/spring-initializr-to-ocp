@@ -38,6 +38,17 @@ then
     dependencies="$dependencies,mail"
 fi
 
+repo_id="$jira_key-$artifact_id"
+github_data=$(cat <<-END
+{ 
+    "name": "$repo_id", 
+    "has_issues": false,
+    "has_projects": false,
+    "has_wiki": false
+}
+END
+)
+
 echo "Creating new project with following details."
 echo "JIRA key:        $jira_key"
 echo "GroupId:         $group_id"
@@ -72,14 +83,16 @@ cd $temp_dir
 
 if [ $new_repo -eq 1 ]
 then
+    echo "Data: $github_data"    
+
     curl -i -H "Authorization: token $github_token" \
-        -d "$(generate_post_data)" \
+        --data "$github_data" \
         https://api.github.com/user/repos
 
     git init
     git add --all
     git commit -m "Initial commit."
-    git remote add origin git@github.com:pittar/testrepo.git
+    git remote add origin git@github.com:pittar/$repo_id.git
     git push -u origin master
 
     # Create DEV and TEST ocp projects.
@@ -93,14 +106,3 @@ then
     # Delete temp dir.
     rm -rf $temp_dir
 fi
-
-generate_post_data() {
-  cat <<EOF
-{ 
-    "name": "$artifact_id", 
-    "has_issues": false,
-    "has_projects": false,
-    "has_wiki": false
-}
-EOF 
-}
