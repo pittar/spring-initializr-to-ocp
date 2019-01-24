@@ -73,12 +73,7 @@ cd $temp_dir
 if [ $new_repo -eq 1 ]
 then
     curl -i -H "Authorization: token $github_token" \
-        -d '{ 
-            "name": "testrepo", 
-            "has_issues": false,
-            "has_projects": false,
-            "has_wiki": false
-        }' \
+        -d "$(generate_post_data)" \
         https://api.github.com/user/repos
 
     git init
@@ -99,8 +94,7 @@ then
     rm -rf $temp_dir
 fi
 
-generate_post_data()
-{
+generate_post_data() {
   cat <<EOF
 { 
     "name": "$artifact_id", 
