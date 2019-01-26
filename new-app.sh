@@ -9,6 +9,9 @@ github_token=$1
 # The basic dependencies.
 dependencies="web,devtools"
 
+# CI/CD namespace
+read -p "CI/CD namespace (e.g. cicd), or empty to create: " cicd_namespace
+
 # Minimum required info.
 read -p "JIRA key: " jira_key
 read -p "GroupId: $group_id_prefix.$jira_key." group_id_suffix
@@ -39,6 +42,7 @@ then
 fi
 
 repo_id="$jira_key-$artifact_id"
+
 github_data=$(cat <<-END
 { 
     "name": "$repo_id", 
@@ -71,7 +75,7 @@ curl https://start.spring.io/starter.tgz \
 
 # Make a folder for OCP and copy files.
 mkdir "$temp_dir/ocp"
-cp ocp/template.yaml $temp_dir/ocp
+cp ocp/*.yaml $temp_dir/ocp
 cp jenkins/Jenkinsfile $temp_dir
 cp .gitignore $temp_dir
 # Delete maven wrapper. Comment this out if you actually want it.
@@ -79,30 +83,44 @@ rm -rf $temp_dir/.mvn
 rm $temp_dir/mvnw
 rm $temp_dir/mvnw.cmd
 
+# Change to the temp dir.
 cd $temp_dir
+  
+# Create the new GitHub repo.
+curl -i -H "Authorization: token $github_token" \
+    --data "$github_data" \
+    https://api.github.com/user/repos
 
-if [ $new_repo -eq 1 ]
-then
-    echo "Data: $github_data"    
+# Init the local repo, then commit and push to GitHub.
+git init
+git add --all
+git commit -m "Initial commit."
+git remote add origin git@github.com:pittar/$repo_id.git
+git push -u origin master
 
-    curl -i -H "Authorization: token $github_token" \
-        --data "$github_data" \
-        https://api.github.com/user/repos
+# Create the CI/CD project.
+oc new-project $cicd_project
+# Create the ImageStream, Build, and Pipeline.
+oc process -f ocp/build-template.yaml -p GIT_SOURCE_URL=https://github.com/pittar/testrepo.git \
+    | oc create -f -
 
-    git init
-    git add --all
-    git commit -m "Initial commit."
-    git remote add origin git@github.com:pittar/$repo_id.git
-    git push -u origin master
+# Create DEV, UAT, and QA projects.
+oc new-project $jira_key-dev
+oc process -f ocp/app-template.yaml \
+    -p ENVIRONMENT=dev \
+    | oc create -f -
 
-    # Create DEV and TEST ocp projects.
-    oc new-project $jira_key-dev
-    #oc new-project $jira_key-test
-    oc process -f ocp/template.yaml -p GIT_SOURCE_URL=https://github.com/pittar/testrepo.git \
-        | oc create -f -
+oc new-project $jira_key-uat
+oc process -f ocp/app-template.yaml \
+    -p ENVIRONMENT=uat \
+    | oc create -f -
 
-    # Bak to originl directory.
-    cd $work_dir
-    # Delete temp dir.
-    rm -rf $temp_dir
-fi
+oc new-project $jira_key-qa
+oc process -f ocp/app-template.yaml \
+    -p ENVIRONMENT=qa \
+    | oc create -f -
+
+# Bak to originl directory.
+cd $work_dir
+# Delete temp dir.
+rm -rf $temp_dir
