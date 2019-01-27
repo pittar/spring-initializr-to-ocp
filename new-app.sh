@@ -10,7 +10,7 @@ github_token=$1
 dependencies="web,devtools"
 
 # CI/CD namespace
-read -p "CI/CD namespace (e.g. cicd), or empty to create: " cicd_namespace
+read -p "CI/CD project (e.g. cicd), or empty to create: " cicd_project
 
 # Minimum required info.
 read -p "JIRA key: " jira_key
