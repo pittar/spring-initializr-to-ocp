@@ -101,7 +101,7 @@ git push -u origin master
 # Create the CI/CD project.
 oc new-project $cicd_project
 # Create the ImageStream, Build, and Pipeline.
-oc process -f ocp/build-template.yaml -p GIT_SOURCE_URL=https://github.com/pittar/testrepo.git \
+oc process -f ocp/build-template.yaml -p GIT_SOURCE_URL=https://github.com/pittar/$repo_id.git \
     | oc create -f -
 
 # Create DEV, UAT, and QA projects.
