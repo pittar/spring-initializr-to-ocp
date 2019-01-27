@@ -46,6 +46,7 @@ try {
             }
         }
         stage("Deploy UAT") {
+            input "Deploy to UAT?"
             openshift.withCluster() {
                 openshift.withProject() {
                     openshift.tag("${appName}:dev", "${appName}:uat")
@@ -53,6 +54,7 @@ try {
             }
         }
         stage("Deploy QA") {
+            input "Deploy to QA?"
             openshift.withCluster() {
                 openshift.withProject() {
                     openshift.tag("${appName}:uat", "${appName}:qa")
