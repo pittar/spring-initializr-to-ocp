@@ -10,7 +10,7 @@ github_token=$1
 dependencies="web,devtools"
 
 # CI/CD namespace
-read -p "CI/CD project (e.g. cicd), or empty to create: " cicd_project
+read -p "CI/CD project (e.g. cicd): " cicd_project
 
 # Minimum required info.
 read -p "JIRA key: " jira_key
@@ -99,22 +99,26 @@ git remote add origin git@github.com:pittar/$repo_id.git
 git push -u origin master
 
 # Create the CI/CD project.
+echo "Create CI/CD project and install template."
 oc new-project $cicd_project
-# Create the ImageStream, Build, and Pipeline.
-oc process -f ocp/build-template.yaml -p GIT_SOURCE_URL=https://github.com/pittar/$repo_id.git \
+oc process -f ocp/build-template.yaml \
+    -p GIT_SOURCE_URL=https://github.com/pittar/$repo_id.git \
     | oc create -f -
 
 # Create DEV, UAT, and QA projects.
+echo "Create DEV project."
 oc new-project $jira_key-dev
 oc process -f ocp/app-template.yaml \
     -p ENVIRONMENT=dev \
     | oc create -f -
 
+echo "Create UAT project."
 oc new-project $jira_key-uat
 oc process -f ocp/app-template.yaml \
     -p ENVIRONMENT=uat \
     | oc create -f -
 
+echo "Create QA project."
 oc new-project $jira_key-qa
 oc process -f ocp/app-template.yaml \
     -p ENVIRONMENT=qa \
@@ -123,4 +127,5 @@ oc process -f ocp/app-template.yaml \
 # Bak to originl directory.
 cd $work_dir
 # Delete temp dir.
+echo "Clean up..."
 rm -rf $temp_dir
