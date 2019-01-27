@@ -8,6 +8,10 @@ parameters:
   displayName: Application Name
   required: true
   value: openshift-maven-jenkins-app
+- name: ENVIRONMENT
+  description: Name of the environment (e.g. dev/uat/qa).
+  displayName: Environment Name
+  required: true
 objects:
 - apiVersion: v1
   kind: DeploymentConfig
